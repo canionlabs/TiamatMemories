@@ -1,24 +1,36 @@
 ﻿using System;
+using System.Threading;
 using Memory.clients;
 
 namespace Memory
 {
     class Program
     {
+        static MemoryManager memoryManager;
+
+        static volatile bool running = true;
+
         static void Main(string[] args)
         {
             Console.WriteLine("Starting");
+            Console.CancelKeyPress += QuitHandler;
 
+            memoryManager = new MemoryManager();
+            memoryManager.Start();
 
-            IClient client = ClientFactory.AcquireClient(ClientType.MQTT);
+            while (running)
+            {
+                memoryManager.Service();
+                Thread.Sleep(1);
+            }
 
-            client.Subscribe("hello");
+            Console.WriteLine("Bye");
+        }
 
-            //while(!Console.KeyAvailable)
-            //{
-            //}
-
-            Console.WriteLine("bye");
+        static void QuitHandler(object sender, ConsoleCancelEventArgs e)
+        {
+            memoryManager.CleanUp();
+            running = false;
         }
     }
 }

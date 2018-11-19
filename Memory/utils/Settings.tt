@@ -1,0 +1,66 @@
+﻿<#@ template language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#
+List<Config> configs = new List<Config>();
+
+configs.Add(new Config("Host", "broker.ip"));
+configs.Add(new Config("Port", "broker.port"));
+configs.Add(new Config("Entrypoint", "entry_point"));
+configs.Add(new Config("MaxTopics", "max_topics"));
+
+#>
+using System;
+using System.Configuration;
+
+namespace Memory.utils
+{
+    public static class Settings
+    {
+<#
+    foreach (Config cfg in configs)
+    {
+#>
+
+        public static string <#= cfg.Name #>
+        {
+            get { return Read("<#= cfg.Key #>"); }
+        }
+<#
+    }
+#>
+
+        public static String Read(string key)
+        {
+            try
+            {
+                var appSettings = ConfigurationManager.AppSettings;
+                return appSettings[key];
+            }
+            catch (ConfigurationErrorsException)
+            {
+                Console.WriteLine("Error reading app settings");
+            }
+
+            return null;
+        }
+    }
+}
+
+<#+
+
+class Config 
+{
+    public string Name { get; set; }
+    public string Key { get; set; }
+    
+    public Config(string name, string key) 
+    {
+        this.Name = name;
+        this.Key = key;
+    }
+}
+
+#>

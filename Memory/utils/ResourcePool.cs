@@ -17,11 +17,29 @@ namespace Memory.utils
 
         // ========= PUBLIC METHODS ====================================================================================
 
+        public void Service()
+        {
+            foreach (ResourceType resource in resources)
+            {
+                resource.Service();
+            }
+        }
+
+        public void CleanUp()
+        {
+            foreach (ResourceType resource in resources)
+            {
+                resource.Dispose();
+            }
+
+            resources.Clear();
+        }
+
         public ResourceType AcquireResource()
         {
             ResourceType resource = resources.Find((item) =>
             {
-                return item.Available();
+                return item.IsAvailable;
             });
 
             if (resource == null)

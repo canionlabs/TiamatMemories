@@ -5,6 +5,27 @@ namespace Memory.utils
 {
     public static class Settings
     {
+
+        public static string Host
+        {
+            get { return Read("broker.ip"); }
+        }
+
+        public static string Port
+        {
+            get { return Read("broker.port"); }
+        }
+
+        public static string Entrypoint
+        {
+            get { return Read("entry_point"); }
+        }
+
+        public static string MaxTopics
+        {
+            get { return Read("max_topics"); }
+        }
+
         public static String Read(string key)
         {
             try
@@ -21,3 +42,4 @@ namespace Memory.utils
         }
     }
 }
+
