@@ -4,52 +4,46 @@ using Memory.utils;
 
 namespace Memory.clients
 {
-	public enum ClientType
+	public static class ClientFactory<T> where T : class, IClient, IDataResource, new()
 	{
-		MQTT
-	}
+		// ========= PUBLIC MEMBERS ====================================================================================
 
-	public static class ClientFactory
-	{
-		static readonly ResourcePool<MQTTClient> mqttPool;
+		public static int Total => _pool.TotalAllocated;
+
+		// ========= PRIVATE MEMBERS ====================================================================================
+
+		static readonly ResourcePool<T> _pool;
 
 		static ClientFactory()
 		{
-			mqttPool = new ResourcePool<MQTTClient>();
+			_pool = new ResourcePool<T>(30);
 		}
 
+		// ========= PUBLIC METHODS ====================================================================================
+
 		/// <summary>
-		/// Returns a usage instance of a certain client type
+		/// Returns an instance
 		/// </summary>
 		/// <returns>The client.</returns>
-		/// <param name="type">Type of the client. <see cref="Memory.clients.ClientType"/>.</param>
-		public static IClient AcquireClient(ClientType type)
+		public static T BuildClient(string host, int port)
 		{
-			IClient client = null;
-
-			switch (type)
-			{
-				case ClientType.MQTT:
-					client = mqttPool.AcquireResource();
-					break;
-			}
+			T client = _pool.AcquireResource();
 
 			if (client != null)
 			{
-				client.Setup(Settings.Host, int.Parse(Settings.Port));
+				client.Setup(host, port);
+			}
+			else
+			{
+				throw new Exception("Impossible to Acquire Resource");
 			}
 
 			return client;
 		}
 
-		public static void Service()
-		{
-			mqttPool.Service();
-		}
-
 		public static void CleanUp()
 		{
-			mqttPool.CleanUp();
+			_pool.CleanUp();
 		}
 	}
 }

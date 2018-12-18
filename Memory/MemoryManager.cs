@@ -17,15 +17,12 @@ namespace Memory
 			Console.WriteLine("Memory Ready");
 		}
 
-		public override void Service()
+		public void Service()
 		{
-			base.Service();
-			ClientFactory.Service();
 		}
 
 		public void CleanUp()
 		{
-			ClientFactory.CleanUp();
 			Dispose();
 		}
 
@@ -38,8 +35,7 @@ namespace Memory
 
 			Console.WriteLine("Incoming topic: {0}", data);
 
-			IClient client = ClientFactory.AcquireClient(ClientType.MQTT);
-
+			IClient client = ClientFactory<MQTTClient>.BuildClient(Settings.Host, int.Parse(Settings.Port));
 			client.Subscribe(data);
 			client.MessageHandler = DataHandler;
 		}

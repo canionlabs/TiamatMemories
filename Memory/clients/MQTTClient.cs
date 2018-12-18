@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Memory.utils;
 using uPLibrary.Networking.M2Mqtt.Messages;
@@ -9,7 +10,7 @@ using MQClient = uPLibrary.Networking.M2Mqtt.MqttClient;
 
 namespace Memory.clients
 {
-	public class MQTTClient : IDataResource, IClient
+	public class MQTTClient : IClient, IDataResource
 	{
 		// ========= PUBLIC MEMBERS ===================================================================================
 
@@ -21,7 +22,7 @@ namespace Memory.clients
 		{
 			get
 			{
-				return _IsSetup && !_disposedValue && (_subscribedTopics.Count != _subscribedTopics.Capacity);
+				return _IsSetup && !_disposedValue && (_subscribedTopics.Count < _subscribedTopics.Capacity);
 			}
 		}
 
@@ -36,45 +37,25 @@ namespace Memory.clients
 			}
 		}
 
-		// ========= PRIVATE MEMBERS ===================================================================================
+		public ClientType ClientType => ClientType.MQTT;
 
-		bool _IsSetup { get; set; }
+		// ========= PRIVATE MEMBERS ===================================================================================
 
 		private const int CONNECTION_DELAY = 5;
 
 		string _clientId;
-		IPEndPoint _brokerEndPoint;
 		MQClient _client;
+		IPEndPoint _brokerEndPoint;
+		MessageHandler _messageHandler;
 
 		List<string> _subscribedTopics;
 		Dictionary<int, string> _subscribedTopicsMapping;
 
+		bool _IsSetup;
 		bool _disposedValue;
-		MessageHandler _messageHandler;
+		DateTime _nextReconnectAttempt;
 
-		DateTime _lastReconnectAttempt;
-
-		// ========= PRIVATE METHODS ===================================================================================
-
-		/// <summary>
-		/// Handler messages from the subscribed topics.
-		/// </summary>
-		/// <param name="sender">Sender.</param>
-		/// <param name="evt">Event message</param>
-		void OnMessageHandler(object sender, MqttMsgPublishEventArgs evt)
-		{
-			_messageHandler?.Invoke(evt.Topic, Encoding.UTF8.GetString(evt.Message));
-		}
-
-		void OnTopicSubscribeHandler(object sender, MqttMsgSubscribedEventArgs e)
-		{
-			Console.WriteLine("Topic subscribed {0}", e.MessageId);
-		}
-
-		void OnTopicUnsubscribeHandler(object sender, MqttMsgUnsubscribedEventArgs e)
-		{
-			Console.WriteLine("Topic unsubscribed {0}", e.MessageId);
-		}
+		Thread _connectionThread;
 
 		// ========= PUBLIC MEMBERS ====================================================================================
 
@@ -87,6 +68,7 @@ namespace Memory.clients
 		{
 			if (!_IsSetup)
 			{
+				_clientId = Guid.NewGuid().ToString();
 				_brokerEndPoint = new IPEndPoint(IPAddress.Parse(host), port);
 
 				_client = new MQClient(host);
@@ -97,46 +79,17 @@ namespace Memory.clients
 				_subscribedTopics = new List<string>(int.Parse(Settings.MaxTopics));
 				_subscribedTopicsMapping = new Dictionary<int, string>(int.Parse(Settings.MaxTopics));
 
-				_lastReconnectAttempt = DateTime.Now;
-
 				_disposedValue = false;
 				_IsSetup = true;
-			}
-		}
 
-		/// <summary>
-		/// This maintain the instance running
-		/// </summary>
-		public virtual void Service()
-		{
-			if (_IsSetup && !_client.IsConnected)
-			{
-				// if (DateTime.Now.Subtract(lastReconnectAttempt).TotalSeconds > CONNECTION_DELAY)
-				// {
-				try
+				_connectionThread = new Thread(ConnectionService)
 				{
-					// Console.WriteLine("Connect procedure");
+					IsBackground = true,
+					Name = "ConnectionService"
+				};
+				_connectionThread.Start();
 
-					_clientId = Guid.NewGuid().ToString();
-					_client.Connect(_clientId);
-
-					var savedTopics = _subscribedTopics.ToArray();
-					_subscribedTopics.Clear();
-
-					foreach (string topic in savedTopics)
-					{
-						Subscribe(topic);
-					}
-				}
-				catch (Exception)
-				{
-					// Console.WriteLine("Error while trying to connect, retry in {0} seconds", CONNECTION_DELAY);
-				}
-				finally
-				{
-					// lastReconnectAttempt = DateTime.Now;
-				}
-				// }
+				Console.WriteLine("Setup Client {0}", _clientId);
 			}
 		}
 
@@ -200,6 +153,69 @@ namespace Memory.clients
 				}
 
 				_disposedValue = true;
+			}
+		}
+
+		// ========= PRIVATE METHODS ===================================================================================
+
+		/// <summary>
+		/// Handler messages from the subscribed topics.
+		/// </summary>
+		/// <param name="sender">Sender.</param>
+		/// <param name="evt">Event message</param>
+		private void OnMessageHandler(object sender, MqttMsgPublishEventArgs evt)
+		{
+			_messageHandler?.Invoke(evt.Topic, Encoding.UTF8.GetString(evt.Message));
+		}
+
+		private void OnTopicSubscribeHandler(object sender, MqttMsgSubscribedEventArgs e)
+		{
+			Console.WriteLine("Topic subscribed {0}", e.MessageId);
+		}
+
+		private void OnTopicUnsubscribeHandler(object sender, MqttMsgUnsubscribedEventArgs e)
+		{
+			Console.WriteLine("Topic unsubscribed {0}", e.MessageId);
+		}
+
+		private void ConnectionService()
+		{
+			Console.WriteLine("Starting Connection Service");
+
+			_nextReconnectAttempt = DateTime.Now;
+
+			while (true)
+			{
+				if (_IsSetup && !_client.IsConnected)
+				{
+					if (DateTime.Now.Subtract(_nextReconnectAttempt).TotalMilliseconds > 0)
+					{
+						try
+						{
+							Console.WriteLine("Connect procedure");
+
+							_client.Connect(_clientId);
+
+							var savedTopics = _subscribedTopics.ToArray();
+							_subscribedTopics.Clear();
+
+							foreach (string topic in savedTopics)
+							{
+								Subscribe(topic);
+							}
+						}
+						catch (Exception)
+						{
+							Console.WriteLine("Error while trying to connect, retry in {0} seconds", CONNECTION_DELAY);
+						}
+						finally
+						{
+							_nextReconnectAttempt = DateTime.Now.AddSeconds(CONNECTION_DELAY);
+						}
+					}
+				}
+
+				Thread.Sleep(1);
 			}
 		}
 	}

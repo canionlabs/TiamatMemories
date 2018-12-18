@@ -2,53 +2,54 @@
 
 namespace Memory.utils
 {
-	public class ResourcePool<ResourceType> where ResourceType : class, IDataResource, new()
+	public class ResourcePool<T> where T : class, IDataResource, new()
 	{
+		// ========= PUBLIC MEMBERS ====================================================================================
+
+		public int TotalAllocated => _resources.Count;
+
 		// ========= PRIVATE MEMBERS ===================================================================================
 
-		readonly List<ResourceType> resources;
-
-		// ========= PRIVATE METHODS ===================================================================================
-
-		public ResourcePool()
-		{
-			resources = new List<ResourceType>(50);
-		}
+		readonly List<T> _resources;
 
 		// ========= PUBLIC METHODS ====================================================================================
 
-		public void Service()
+		public ResourcePool(int size = 50)
 		{
-			foreach (ResourceType resource in resources)
-			{
-				resource.Service();
-			}
+			_resources = new List<T>(size);
 		}
 
-		public void CleanUp()
+		/// <summary>
+		/// Acquires a resource.
+		/// </summary>
+		/// <returns>The resource.</returns>
+		public T AcquireResource()
 		{
-			foreach (ResourceType resource in resources)
-			{
-				resource.Dispose();
-			}
-
-			resources.Clear();
-		}
-
-		public ResourceType AcquireResource()
-		{
-			ResourceType resource = resources.Find((item) =>
+			T resource = _resources.Find((item) =>
 			{
 				return item.IsAvailable;
 			});
 
 			if (resource == null)
 			{
-				resource = new ResourceType();
-				resources.Add(resource);
+				resource = new T();
+				_resources.Add(resource);
 			}
 
 			return resource;
+		}
+
+		/// <summary>
+		/// Dispose and delete all resources
+		/// </summary>
+		public void CleanUp()
+		{
+			foreach (T resource in _resources)
+			{
+				resource.Dispose();
+			}
+
+			_resources.Clear();
 		}
 	}
 }
