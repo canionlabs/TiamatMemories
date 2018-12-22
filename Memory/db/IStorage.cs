@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace Memory.db
 {
@@ -19,7 +18,7 @@ namespace Memory.db
 		/// <param name="url">
 		/// Database url, string following the format mongodb://localhost:27017
 		/// </param>
-		void Setup(string url);
+		void Setup(string url, string dbName, string dbCollection);
 
 		/// <summary>
 		/// Save an event
