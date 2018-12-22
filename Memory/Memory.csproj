@@ -7,6 +7,7 @@
 
   <ItemGroup>
     <PackageReference Include="M2MqttDotnetCore" Version="1.0.8" />
+    <PackageReference Include="mongocsharpdriver" Version="2.7.2" />
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="4.5.0" />
   </ItemGroup>
   <ItemGroup>
