@@ -18,7 +18,7 @@ namespace Memory.db
 			_collection = _database.GetCollection<BsonDocument>(dbCollection);
 		}
 
-		public async void Save(string unixTimestamp, string data)
+		public async void Save(long unixTimestamp, string data)
 		{
 			dynamic document = new BsonDocument
 			{
@@ -30,13 +30,16 @@ namespace Memory.db
 		}
 
 		// ========= PRIVATE MEMBERS ====================================
-		Dictionary<string, string> _metaData;
+		// Dictionary<string, string> _metaData;
 		MongoClient _dbClient;
 		dynamic _database;
 		dynamic _collection;
-		
 
-		// ========= PRIVATE MEMBERS ====================================
-
+		// ========= PUBLIC MEMBERS ====================================
+		public bool isAvaliable()
+		{
+			// Incomplete
+			return true;
+		}
 	}
 }
