@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Memory.utils;
 using MongoDB.Bson;
 using MongoDB.Driver;
 
@@ -16,17 +17,21 @@ namespace Memory.db
 			_dbClient = new MongoClient(url);
 			_database = _dbClient.GetDatabase(dbName);
 			_collection = _database.GetCollection<BsonDocument>(dbCollection);
+			_isSetup = true;
 		}
 
-		public async void Save(long unixTimestamp, string data)
+		public void Save(string data, string topic)
 		{
-			dynamic document = new BsonDocument
-			{
-				{"timestamp", unixTimestamp},
-				{"data", data}
-			};
-			await _collection.InsertOneAsync(document);
+			long tsNow = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+			saveDocument(data, topic, tsNow);
+		}
 
+		public bool IsAvailable
+		{
+			get
+			{
+				return _isSetup;
+			}
 		}
 
 		// ========= PRIVATE MEMBERS ====================================
@@ -34,12 +39,18 @@ namespace Memory.db
 		MongoClient _dbClient;
 		dynamic _database;
 		dynamic _collection;
+		bool _isSetup;
+
+		private async void saveDocument(string data, string topic, long timestamp) {
+			dynamic document = new BsonDocument
+			{
+				{"topic", topic},
+				{"data", data},
+				{"timestamp", timestamp}
+			};
+			await _collection.InsertOneAsync(document);
+		}
 
 		// ========= PUBLIC MEMBERS ====================================
-		public bool isAvaliable()
-		{
-			// Incomplete
-			return true;
-		}
 	}
 }

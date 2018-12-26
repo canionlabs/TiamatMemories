@@ -5,7 +5,6 @@ namespace Memory.db
 	public enum StorageType
 	{
 		MONGODB
-
 	}
 
 	public interface IStorage
@@ -23,12 +22,12 @@ namespace Memory.db
 		/// <summary>
 		/// Save an event
 		/// </summary>
-		/// <param name="unixTimestamp">
-		/// A long timestamp follwing the format of the Unix Timestamp
-		/// </param>
 		/// <param name="data">
 		/// Received data
 		/// </param>
-		void Save(long unixTimestamp, string data);
+		/// <param name="topic">
+		/// MQTT Topic
+		/// </param>
+		void Save(string data, string origin);
 	}
 }
