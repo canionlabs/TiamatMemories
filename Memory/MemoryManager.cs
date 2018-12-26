@@ -33,15 +33,16 @@ namespace Memory
 				return;
 			}
 
-			Console.WriteLine("Incoming topic: {0}", data);
+			Console.WriteLine("Incoming topic: {0} | Message: {1}", topic, data);
 
 			IClient client = ClientFactory<MQTTClient>.BuildClient(Settings.Host, int.Parse(Settings.Port));
-			client.Subscribe(data);
+			client.Subscribe(topic);
 			client.MessageHandler = DataHandler;
 		}
 
 		void DataHandler(string topic, string data)
 		{
+			// IDataResource dataResource = 
 			Console.WriteLine("Saving data {0} from {1}", data, topic);
 		}
 	}
