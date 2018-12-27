@@ -10,9 +10,17 @@ namespace Memory.clients
 
 		public static int Total => _pool.TotalAllocated;
 
-		// ========= PRIVATE MEMBERS ====================================================================================
+        public static List<T> ListResources
+        {
+            get
+            {
+                return _pool.ListResources();
+            }
+        }
 
-		static readonly ResourcePool<T> _pool;
+        // ========= PRIVATE MEMBERS ====================================================================================
+
+        static readonly ResourcePool<T> _pool;
 
 		static ClientFactory()
 		{

@@ -19,11 +19,16 @@ namespace Memory.utils
 			_resources = new List<T>(size);
 		}
 
-		/// <summary>
-		/// Acquires a resource.
-		/// </summary>
-		/// <returns>The resource.</returns>
-		public T AcquireResource()
+        public List<T> ListResources()
+        {
+            return _resources;
+        }
+
+        /// <summary>
+        /// Acquires a resource.
+        /// </summary>
+        /// <returns>The resource.</returns>
+        public T AcquireResource()
 		{
 			T resource = _resources.Find((item) =>
 			{

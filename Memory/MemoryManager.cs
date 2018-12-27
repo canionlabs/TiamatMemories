@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 using Memory.clients;
 using Memory.utils;
 
@@ -13,7 +14,7 @@ namespace Memory
 
 			MessageHandler = MemoryHandler;
 
-			Subscribe(Settings.Entrypoint);
+			Subscribe(Settings.MainEntrypoint);
 			Console.WriteLine("Memory Ready");
 		}
 
@@ -26,19 +27,43 @@ namespace Memory
 			Dispose();
 		}
 
-		void MemoryHandler(string topic, string data)
+        /// <summary>
+        /// Check if a topic is subscribed for more than one resource.
+        /// </summary>
+        /// <returns><c>true</c>, if subscribe was uniqued, <c>false</c> otherwise.</returns>
+        /// <param name="listResources">List resources.</param>
+        /// <param name="topic">Topic.</param>
+        public bool UniqueSubscribe(List<MQTTClient> listResources, string topic)
+        {
+            foreach (var resource in listResources)
+            {
+                if (resource.IsSubscribed(topic))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        void MemoryHandler(string topic, string data)
 		{
-			if (topic != Settings.Entrypoint)
+            // Not allowed topics
+            if (!topic.StartsWith(Settings.Entrypoint, StringComparison.CurrentCulture))
 			{
-				return;
+                return;
 			}
 
-			Console.WriteLine("Incoming topic: {0}", data);
+			Console.WriteLine("Incoming topic: {0}, data: {1}", topic, data);
 
 			IClient client = ClientFactory<MQTTClient>.BuildClient(Settings.Host, int.Parse(Settings.Port));
-			client.Subscribe(data);
-			client.MessageHandler = DataHandler;
-		}
+            List<MQTTClient> listResources = ClientFactory<MQTTClient>.ListResources;
+            if (!client.IsSubscribed(topic) && UniqueSubscribe(listResources, topic))
+            {
+                client.Subscribe(topic);
+                client.MessageHandler = DataHandler;
+                client.Publish(topic, data);
+            }
+        }
 
 		void DataHandler(string topic, string data)
 		{
