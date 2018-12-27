@@ -26,7 +26,7 @@ namespace Memory.clients
 			}
 		}
 
-		public MessageHandler MessageHandler
+        public MessageHandler MessageHandler
 		{
 			set
 			{
@@ -112,7 +112,7 @@ namespace Memory.clients
 		/// <param name="topic">Topic.</param>
 		public void Subscribe(string topic)
 		{
-			if (IsAvailable && !_subscribedTopics.Contains(topic))
+			if (IsAvailable && !IsSubscribed(topic))
 			{
 				if (_client.IsConnected)
 				{
@@ -125,7 +125,17 @@ namespace Memory.clients
 			}
 		}
 
-		public void Dispose()
+        /// <summary>
+        /// Check if a topic has already been subscribed.
+        /// </summary>
+        /// <returns><c>true</c>, if subscribed was ised, <c>false</c> otherwise.</returns>
+        /// <param name="topic">Topic.</param>
+        public bool IsSubscribed(string topic)
+        {
+            return _subscribedTopics.Contains(topic);
+        }
+
+        public void Dispose()
 		{
 			Dispose(true);
 		}

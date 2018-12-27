@@ -20,5 +20,6 @@ namespace Memory.clients
 		void Setup(string host, int port);
 		void Subscribe(string topic);
 		void Publish(string topic, string data);
+        bool IsSubscribed(string topic);
 	}
 }
