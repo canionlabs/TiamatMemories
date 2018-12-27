@@ -9,6 +9,7 @@ List<Config> configs = new List<Config>();
 configs.Add(new Config("Host", "broker.ip"));
 configs.Add(new Config("Port", "broker.port"));
 configs.Add(new Config("Entrypoint", "entry_point"));
+configs.Add(new Config("MainEntrypoint", "main_entrypoint"));
 configs.Add(new Config("MaxTopics", "max_topics"));
 
 #>
