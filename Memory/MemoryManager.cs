@@ -11,7 +11,7 @@ namespace Memory
 		{
 			Setup(Settings.Host, int.Parse(Settings.Port));
 
-			MessageHandler = MemoryHandler;
+			MessageHandler += MemoryHandler;
 
 			Subscribe(Settings.Entrypoint);
 			Console.WriteLine("Memory Ready");
@@ -37,7 +37,7 @@ namespace Memory
 
 			IClient client = ClientFactory<MQTTClient>.BuildClient(Settings.Host, int.Parse(Settings.Port));
 			client.Subscribe(data);
-			client.MessageHandler = DataHandler;
+			client.MessageHandler += DataHandler;
 		}
 
 		void DataHandler(string topic, string data)

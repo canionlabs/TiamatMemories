@@ -4,8 +4,6 @@ using Memory.utils;
 
 namespace Memory.clients
 {
-	public delegate void MessageHandler(string topic, string data);
-
 	public enum ClientType
 	{
 		MQTT,
@@ -14,7 +12,7 @@ namespace Memory.clients
 
 	public interface IClient
 	{
-		MessageHandler MessageHandler { set; }
+		event Action<string, string> MessageHandler;
 		ClientType ClientType { get; }
 
 		void Setup(string host, int port);

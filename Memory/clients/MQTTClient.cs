@@ -26,18 +26,8 @@ namespace Memory.clients
 			}
 		}
 
-		public MessageHandler MessageHandler
-		{
-			set
-			{
-				if (_messageHandler == null)
-				{
-					_messageHandler = value;
-				}
-			}
-		}
-
 		public ClientType ClientType => ClientType.MQTT;
+		public event Action<string, string> MessageHandler;
 
 		// ========= PRIVATE MEMBERS ===================================================================================
 
@@ -46,7 +36,6 @@ namespace Memory.clients
 		string _clientId;
 		MQClient _client;
 		IPEndPoint _brokerEndPoint;
-		MessageHandler _messageHandler;
 
 		List<string> _subscribedTopics;
 		Dictionary<int, string> _subscribedTopicsMapping;
@@ -165,7 +154,7 @@ namespace Memory.clients
 		/// <param name="evt">Event message</param>
 		private void OnMessageHandler(object sender, MqttMsgPublishEventArgs evt)
 		{
-			_messageHandler?.Invoke(evt.Topic, Encoding.UTF8.GetString(evt.Message));
+			MessageHandler?.Invoke(evt.Topic, Encoding.UTF8.GetString(evt.Message));
 		}
 
 		private void OnTopicSubscribeHandler(object sender, MqttMsgSubscribedEventArgs e)
