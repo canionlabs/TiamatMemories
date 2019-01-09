@@ -65,8 +65,8 @@ namespace Memory.clients
 				_client.MqttMsgSubscribed += OnTopicSubscribeHandler;
 				_client.MqttMsgUnsubscribed += OnTopicUnsubscribeHandler;
 
-				_subscribedTopics = new List<string>(int.Parse(Settings.MaxTopics));
-				_subscribedTopicsMapping = new Dictionary<int, string>(int.Parse(Settings.MaxTopics));
+				_subscribedTopics = new List<string>(10);
+				_subscribedTopicsMapping = new Dictionary<int, string>(10);
 
 				_disposedValue = false;
 				_IsSetup = true;
