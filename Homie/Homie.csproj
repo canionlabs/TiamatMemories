@@ -6,5 +6,9 @@
 
   <ItemGroup>
     <Folder Include="utils\" />
+    <Folder Include="data\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="data\Node.cs" />
   </ItemGroup>
 </Project>
