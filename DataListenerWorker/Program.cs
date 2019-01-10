@@ -45,11 +45,6 @@ namespace DataListenerWorker
 			}
 
 			Console.WriteLine("Bye");
-
-			//var pattern = string.Format(@"^{0}\/\w*\/{1}$", "homie", "$name".Replace("$", "\\$"));
-			//var test = "homie/686f6d6965/$name";
-			//Regex regex = new Regex(pattern, RegexOptions.Compiled | RegexOptions.Singleline);
-			//Console.WriteLine( regex.IsMatch(test) );
 		}
 
 		static void QuitHandler(object sender, ConsoleCancelEventArgs e)
