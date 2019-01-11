@@ -23,12 +23,12 @@ namespace Homie.utils
 		}
 	}
 
-	[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
+	[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property | AttributeTargets.Class | AttributeTargets.Struct)]
 	public class HomieMap : Attribute
 	{
 		public string tag;
 
-		public HomieMap(string tag)
+		public HomieMap(string tag = "\\w*")
 		{
 			this.tag = tag.Replace("$", "\\$");
 		}

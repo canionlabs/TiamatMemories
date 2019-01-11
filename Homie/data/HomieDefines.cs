@@ -37,8 +37,8 @@ namespace Homie.Data
 		[HomieStruct]
 		public Firmware Firmware { get; set; }
 
-		[HomieMap("$nodes")]
-		public Dictionary<string, Node> Nodes;
+		[HomieMap]
+		public Dictionary<string, Node> Nodes { get; set; }
 
 		public Device()
 		{
@@ -104,6 +104,7 @@ Firmware:
 		}
 	}
 
+	[HomieMap("$nodes")]
 	public class Node
 	{
 		public string Id;
@@ -111,7 +112,7 @@ Firmware:
 		[HomieField("$type")]
 		public string Type { get; set; }
 
-		[HomieMap("$properties")]
+		[HomieMap]
 		public Dictionary<string, Property> Properties { get; set; }
 
 		public Node()
@@ -120,6 +121,7 @@ Firmware:
 		}
 	}
 
+	[HomieMap("$properties")]
 	public struct Property
 	{
 		public string Name { get; set; }

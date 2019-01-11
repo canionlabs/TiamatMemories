@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using Homie.Data;
@@ -10,9 +11,9 @@ namespace Homie
 	{
 		public static void ProcessField(string mainTopic, string data, string baseTopic, PropertyInfo property, ref object obj)
 		{
-			HomieField field = property.GetCustomAttribute<HomieField>();
+			HomieField @header = property.GetCustomAttribute<HomieField>();
 
-			baseTopic = baseTopic.JoinTopic(field.tag);
+			baseTopic = baseTopic.JoinTopic(@header.tag);
 
 			Console.WriteLine(baseTopic);
 
@@ -35,10 +36,38 @@ namespace Homie
 			}
 		}
 
+		public static void ProcessMap(string mainTopic, string data, string baseTopic, PropertyInfo property, ref object obj)
+		{
+			var map = property.GetValue(obj);
+			var @generics = map.GetType().GenericTypeArguments;
+			var targetType = @generics[1];
+
+			var @header = targetType.GetCustomAttribute<HomieMap>();
+
+			baseTopic = baseTopic.JoinTopic(@header.tag);
+
+			if (Regex.IsMatch(mainTopic, baseTopic))
+			{
+				Console.WriteLine("Processing property {0} with data {1}", property.Name, data);
+
+				var keys = data.Split(",");
+				MethodInfo method = map.GetType().GetMethod("TryAdd", @generics);
+
+				foreach(var key in keys)
+				{
+					var item = Activator.CreateInstance(targetType);
+
+					method.Invoke(map, new object[] { key, item });
+
+					Console.WriteLine("Creating new {0} with key {1}", targetType, key);
+				}
+			}
+		}
+
 		public static void ProcessStruct(string mainTopic, string data, string baseTopic, ref object obj)
 		{
 			Type @type = obj.GetType();
-			Console.WriteLine(@type.Name);
+			//Console.WriteLine(@type.Name);
 
 			HomieStruct @header = @type.GetCustomAttribute<HomieStruct>();
 
@@ -46,7 +75,7 @@ namespace Homie
 			{
 				baseTopic = baseTopic.JoinTopic(@header.tag);
 
-				Console.WriteLine(baseTopic);
+				//Console.WriteLine(baseTopic);
 
 				foreach (var property in @type.GetProperties())
 				{
@@ -63,6 +92,11 @@ namespace Homie
 							ProcessStruct(mainTopic, data, baseTopic, ref @struct);
 
 							property.SetValue(obj, @struct);
+						}
+
+						if (attr is HomieMap)
+						{
+							ProcessMap(mainTopic, data, baseTopic, property, ref obj);
 						}
 					}
 				}
