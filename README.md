@@ -1,3 +1,5 @@
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/45cbd5c889ff42a1bffe241b87cfd865)](https://www.codacy.com/app/ramonmelo/TiamatMemories?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=canionlabs/TiamatMemories&amp;utm_campaign=Badge_Grade)
+
 # How to Run ?
 
 0. Run a `MQTT` Broker, like `Mosquitto` or `RabbitMQ`;
