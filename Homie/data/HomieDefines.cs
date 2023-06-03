@@ -46,20 +46,6 @@ namespace Homie.Data
 			this.Firmware = new Firmware();
 			this.Nodes = new Dictionary<string, Node>();
 		}
-
-		public override string ToString()
-		{
-			return string.Format(
-@"Name: {0}
-Homie Version: {1}
-Online: {2}
-LocalIP: {3}
-MAC: {4}
-Stat: 
-{5}
-Firmware: 
-{6}", Name, HomieVersion, Online, LocalIP, MAC, Stat, Firmware);
-		}
 	}
 
 	[HomieStruct("$stats")]
@@ -73,14 +59,6 @@ Firmware:
 
 		[HomieField("interval")]
 		public int Interval { get; set; }
-
-		public override string ToString()
-		{
-			return string.Format(
-@"	Uptime: {0}
-	Signal: {1}
-	Interval: {2}", Uptime, Signal, Interval);
-		}
 	}
 
 	[HomieStruct("$fw")]
@@ -94,14 +72,6 @@ Firmware:
 
 		[HomieField("checksum")]
 		public string Checksum { get; set; }
-
-		public override string ToString()
-		{
-			return string.Format(
-@"	Name: {0}
-	Version: {1}
-	Checksum: {2}", Name, Version, Checksum);
-		}
 	}
 
 	[HomieMap("$nodes")]

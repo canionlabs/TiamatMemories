@@ -22,29 +22,30 @@ namespace Memory.clients
 		{
 			get
 			{
-				return _IsSetup && !_disposedValue && (_subscribedTopics.Count < _subscribedTopics.Capacity);
+				return _IsSetup && !_disposedValue;
 			}
 		}
 
+		public string ClientID { get; private set; }
+
 		public ClientType ClientType => ClientType.MQTT;
-		public event Action<string, string> MessageHandler;
+		//public event Action<string, string> MessageHandler;
 
 		// ========= PRIVATE MEMBERS ===================================================================================
 
 		private const int CONNECTION_DELAY = 5;
 
-		string _clientId;
-		MQClient _client;
-		IPEndPoint _brokerEndPoint;
+		private MQClient _client;
+		private IPEndPoint _brokerEndPoint;
 
-		List<string> _subscribedTopics;
-		Dictionary<int, string> _subscribedTopicsMapping;
+		//private Dictionary<int, string> _subscribedTopicsMapping;
+		private Dictionary<string, Action<string, string>> _subscribedHandlerMapping;
 
-		bool _IsSetup;
-		bool _disposedValue;
-		DateTime _nextReconnectAttempt;
+		private bool _IsSetup;
+		private bool _disposedValue;
+		private DateTime _nextReconnectAttempt;
 
-		Thread _connectionThread;
+		private Thread _connectionThread;
 
 		// ========= PUBLIC MEMBERS ====================================================================================
 
@@ -57,7 +58,7 @@ namespace Memory.clients
 		{
 			if (!_IsSetup)
 			{
-				_clientId = Guid.NewGuid().ToString();
+				ClientID = Guid.NewGuid().ToString();
 				_brokerEndPoint = new IPEndPoint(IPAddress.Parse(host), port);
 
 				_client = new MQClient(host);
@@ -65,8 +66,8 @@ namespace Memory.clients
 				_client.MqttMsgSubscribed += OnTopicSubscribeHandler;
 				_client.MqttMsgUnsubscribed += OnTopicUnsubscribeHandler;
 
-				_subscribedTopics = new List<string>(10);
-				_subscribedTopicsMapping = new Dictionary<int, string>(10);
+				//_subscribedTopicsMapping = new Dictionary<int, string>(10);
+				_subscribedHandlerMapping = new Dictionary<string, Action<string, string>>(10);
 
 				_disposedValue = false;
 				_IsSetup = true;
@@ -78,7 +79,7 @@ namespace Memory.clients
 				};
 				_connectionThread.Start();
 
-				Console.WriteLine("Setup Client {0}", _clientId);
+				Console.WriteLine("Setup Client {0}", ClientID);
 			}
 		}
 
@@ -99,19 +100,9 @@ namespace Memory.clients
 		/// Subscribe the specified topic.
 		/// </summary>
 		/// <param name="topic">Topic.</param>
-		public void Subscribe(string topic)
+		public void Subscribe(string topic, Action<string, string> handler)
 		{
-			if (IsAvailable && !_subscribedTopics.Contains(topic))
-			{
-				if (_client.IsConnected)
-				{
-					var topicID = _client.Subscribe(new string[] { topic }, new byte[] { MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE });
-
-					Console.WriteLine("Client {0} subscribed to topic {1}({2})", _client.ClientId, topic, topicID);
-				}
-
-				_subscribedTopics.Add(topic);
-			}
+			Subscribe(topic, handler, false);
 		}
 
 		public void Dispose()
@@ -147,6 +138,24 @@ namespace Memory.clients
 
 		// ========= PRIVATE METHODS ===================================================================================
 
+		public void Subscribe(string topic, Action<string, string> handler, bool force)
+		{
+			if (IsAvailable && (!_subscribedHandlerMapping.ContainsKey(topic) || force))
+			{
+				if (_client.IsConnected)
+				{
+					var topicID = _client.Subscribe(new string[] { topic }, new byte[] { MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE });
+
+					Console.WriteLine("Client {0} subscribed to topic {1} ({2})", _client.ClientId, topic, topicID);
+				}
+
+				if (!_subscribedHandlerMapping.ContainsKey(topic))
+				{
+					_subscribedHandlerMapping.Add(topic, handler);
+				}
+			}
+		}
+
 		/// <summary>
 		/// Handler messages from the subscribed topics.
 		/// </summary>
@@ -154,7 +163,10 @@ namespace Memory.clients
 		/// <param name="evt">Event message</param>
 		private void OnMessageHandler(object sender, MqttMsgPublishEventArgs evt)
 		{
-			MessageHandler?.Invoke(evt.Topic, Encoding.UTF8.GetString(evt.Message));
+			if (_subscribedHandlerMapping.TryGetValue(evt.Topic, out Action<string, string> handler))
+			{
+				handler.Invoke(evt.Topic, Encoding.UTF8.GetString(evt.Message));
+			}
 		}
 
 		private void OnTopicSubscribeHandler(object sender, MqttMsgSubscribedEventArgs e)
@@ -183,14 +195,11 @@ namespace Memory.clients
 						{
 							Console.WriteLine("Connect procedure");
 
-							_client.Connect(_clientId);
+							_client.Connect(ClientID);
 
-							var savedTopics = _subscribedTopics.ToArray();
-							_subscribedTopics.Clear();
-
-							foreach (string topic in savedTopics)
+							foreach (var item in _subscribedHandlerMapping)
 							{
-								Subscribe(topic);
+								Subscribe(item.Key, item.Value, true);
 							}
 						}
 						catch (Exception)

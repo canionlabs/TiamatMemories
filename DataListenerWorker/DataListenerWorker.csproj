@@ -9,7 +9,14 @@
     <PackageReference Include="AMQPNetLite" Version="2.1.5" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Homie\Homie.csproj" />
     <ProjectReference Include="..\Memory\Memory.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Homie">
+      <HintPath>..\..\HomieCSharp\HomieCSharp\Homie\bin\Debug\netcoreapp2.2\Homie.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\..\HomieCSharp\HomieCSharp\Homie\lib\Newtonsoft.Json.dll</HintPath>
+    </Reference>
   </ItemGroup>
 </Project>

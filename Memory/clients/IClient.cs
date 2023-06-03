@@ -12,11 +12,11 @@ namespace Memory.clients
 
 	public interface IClient
 	{
-		event Action<string, string> MessageHandler;
+		//event Action<string, string> MessageHandler;
 		ClientType ClientType { get; }
 
 		void Setup(string host, int port);
-		void Subscribe(string topic);
+		void Subscribe(string topic, Action<string, string> handler);
 		void Publish(string topic, string data);
 	}
 }
